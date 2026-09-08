@@ -1,0 +1,90 @@
+CREATE TYPE "class_status" AS ENUM('active', 'inactive', 'archived');--> statement-breakpoint
+CREATE TYPE "role" AS ENUM('student', 'teacher', 'admin');--> statement-breakpoint
+CREATE TABLE "classes" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "classes_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"subject_id" integer NOT NULL,
+	"teacher_id" text NOT NULL,
+	"invite_code" varchar(50) NOT NULL UNIQUE,
+	"name" varchar(255) NOT NULL,
+	"banner_cld_pub_id" text,
+	"banner_url" text,
+	"capacity" integer DEFAULT 50 NOT NULL,
+	"description" text,
+	"status" "class_status" DEFAULT 'active'::"class_status" NOT NULL,
+	"schedules" jsonb NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "enrollments" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "enrollments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"student_id" text NOT NULL,
+	"class_id" integer NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "account" (
+	"id" text PRIMARY KEY,
+	"user_id" text NOT NULL,
+	"account_id" text NOT NULL,
+	"provider_id" text NOT NULL,
+	"access_token" text,
+	"refresh_token" text,
+	"access_token_expires_at" timestamp(6) with time zone,
+	"refresh_token_expires_at" timestamp(6) with time zone,
+	"scope" text,
+	"id_token" text,
+	"password" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "session" (
+	"id" text PRIMARY KEY,
+	"user_id" text NOT NULL,
+	"token" text NOT NULL UNIQUE,
+	"expires_at" text NOT NULL,
+	"ip_address" text,
+	"user_agent" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "users" (
+	"id" text PRIMARY KEY,
+	"name" text NOT NULL,
+	"email" text NOT NULL UNIQUE,
+	"email_verified" boolean NOT NULL,
+	"image" text,
+	"role" "role" DEFAULT 'student'::"role" NOT NULL,
+	"image_cld_pub_id" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "verification" (
+	"id" text PRIMARY KEY,
+	"identifier" text NOT NULL,
+	"value" text NOT NULL,
+	"expires_at" timestamp NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX "classes_subject_id_idx" ON "classes" ("subject_id");--> statement-breakpoint
+CREATE INDEX "classes_teacher_id_idx" ON "classes" ("teacher_id");--> statement-breakpoint
+CREATE INDEX "enrollments_student_id_idx" ON "enrollments" ("student_id");--> statement-breakpoint
+CREATE INDEX "enrollments_class_id_idx" ON "enrollments" ("class_id");--> statement-breakpoint
+CREATE INDEX "enrollments_student_class_unique" ON "enrollments" ("student_id","class_id");--> statement-breakpoint
+CREATE INDEX "account_userId_idx" ON "account" ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" ("provider_id","account_id");--> statement-breakpoint
+CREATE INDEX "session_userId_idx" ON "session" ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "session_token_unique" ON "session" ("token");--> statement-breakpoint
+CREATE INDEX "verification_identifier_idx" ON "verification" ("identifier");--> statement-breakpoint
+ALTER TABLE "classes" ADD CONSTRAINT "classes_subject_id_subjects_id_fkey" FOREIGN KEY ("subject_id") REFERENCES "subjects"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "classes" ADD CONSTRAINT "classes_teacher_id_users_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "users"("id") ON DELETE RESTRICT;--> statement-breakpoint
+ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_student_id_users_id_fkey" FOREIGN KEY ("student_id") REFERENCES "users"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_class_id_classes_id_fkey" FOREIGN KEY ("class_id") REFERENCES "classes"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "account" ADD CONSTRAINT "account_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "session" ADD CONSTRAINT "session_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
