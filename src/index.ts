@@ -1,6 +1,8 @@
 import express from "express";
 import "dotenv/config";
 import subjectsRouter from "./routes/subjects.ts";
+import usersRouter from "./routes/users.ts";
+import classesRouter from "./routes/classes.ts";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.ts";
@@ -25,6 +27,10 @@ app.all("/api/auth/{*splat}", toNodeHandler(auth));
 app.use(express.json());
 
 app.use("/api/subjects", subjectsRouter);
+
+app.use("/api/classes", classesRouter);
+
+app.use("/api/users", usersRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, Welcome to Classroom API!");
