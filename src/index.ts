@@ -2,6 +2,8 @@ import express from "express";
 import "dotenv/config";
 import subjectsRouter from "./routes/subjects.ts";
 import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./lib/auth.ts";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -17,6 +19,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.all("/api/auth/{*splat}", toNodeHandler(auth));
 
 app.use(express.json());
 
