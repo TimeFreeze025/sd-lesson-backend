@@ -10,7 +10,7 @@ import { requireRole } from "./middleware/require-role.ts";
 import { httpServerHandler } from "cloudflare:node";
 
 const app = express();
-const PORT = Number(process.env.PORT);
+const PORT = Number(process.env.PORT) || 8000;
 
 if (!process.env.FRONTEND_URL)
   throw new Error("FRONTEND_URL is not defined in the environment variables");
